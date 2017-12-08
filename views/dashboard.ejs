@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>HarborJS</title>
+    <link href="css/bootstrap.css" rel="stylesheet" type="text/css" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+ </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-static-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="">HARBORJS</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right cl-effect-13">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/profile">Account</a></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container pt">
+      <div class="row mt">
+        <div class="col-lg-8 col-lg-offset-2">
+          <div class="text-center">
+           <h2>Your Apps</h2>
+          </div>
+          <hr>
+          <form action="/new">
+            <button type="submit" class="btn btn-info"><span class="fa fa-plus"></span> Create new app/db</button>
+          </form>
+          <br>
+          <div class="panel panel-default">
+            <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>State</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <%for(var i=0; i< containers.length; i++){%>
+					<% if(user.local.username == "admin"){%>
+						<tbody>
+                        <tr>
+                            <td>
+                              <a href="/containers/<%=containers[i].Id%>" id="<%=containers[i].Id%>"><%=containers[i].Image%></a>
+                            </td>
+                            <td>
+                              <%=containers[i].Status%>
+                            </td>
+                            <td>
+                              <form action="/destroy/<%= containers[i].Id %>">
+                                <input type="submit" class="btn btn-danger" value="Delete" name="<%=containers[i].Image%>" id="<%=containers[i].Id%>" onclick="deleteContainer(this)"></input>
+                              </form>
+                              </td>
+                          </tr>
+                        </tbody>
+					<%}%>
+                    <% apps.forEach(function(app){%>
+                      <tbody>
+                        <tr>
+                          <%if(app.user == user.local.username && app.name == containers[i].Image){%>
+                            <td>
+                              <a href="/containers/<%=containers[i].Id%>" id="<%=containers[i].Id%>"><%=containers[i].Image%></a>
+                            </td>
+                            <td>
+                              <%=containers[i].Status%>
+                            </td>
+                            <td>
+                              <form action="/destroy/<%= app._id %>">
+                                <input type="submit" class="btn btn-danger" value="Delete" name="<%=app.name.substring(app.name.indexOf('/')+1).replace(':latest','')%>" id="<%=containers[i].Id%>" onclick="deleteContainer(this)"></input>
+                              </form>
+                              </td>
+                            <%}%>
+                          </tr>
+                        </tbody>
+                      <%})%>
+                    <%}%>
+                  </div>
+                </table>
+              </div>
+              <br>
+              <div class="text-center">
+                <h3>Link DB-App</h3>
+              </div>
+              <hr>
+              <form>
+                <div class="form-group">
+                  <label>DB Name</label>
+                  <input type="text" id="linkdb" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>App Name</label>
+                  <input type="text" id="linkapp" class="form-control">
+                </div>
+                <div class="form-group">
+                  <button type="submit" class="btn btn-info" onclick="dbLink()"><span class="fa fa-link"></span> Link DB-App</button>
+                </div>
+             </form>
+            </div>
+        </div>
+      </div>
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+      <script src="js/bootstrap.min.js"></script>
+      <script>
+        var socket = io.connect('/');
+        function teststring(mystr){
+          if(mystr.match(/[;|""|'']/)){
+            console.log("Error");
+            return false;
+          }
+          return true;
+        }
+
+        function deleteContainer(item){
+          var idcont = $(item).attr("id");
+          var appname = $(item).attr("name");
+          socket.emit('containerId',{idcont: idcont, namecont: appname});
+          window.setTimeout('location.reload()', 1000);
+        }
+
+        function dbLink(){
+          var appname = document.getElementById('linkapp').value;
+          var dbname = document.getElementById('linkdb').value;
+          if(teststring(appname) && teststring(dbname)){
+            socket.emit('dbLink',{appName: appname, dbName: dbname});
+            window.setTimeout('location.reload()', 3000);
+          }
+        }
+      </script>
+  </body>
+</html>
